@@ -1,0 +1,14 @@
+{
+  "id": 1,
+  "name": "Jogador",
+  "level": 1,
+  "xp": 200,
+  "targetXP": 300,
+  "lives": 3,
+  "maxLives": 3,
+  "currentMissionId": 2,
+  "completedMissions": [
+    1,
+    2
+  ]
+}

@@ -1,0 +1,80 @@
+.map-node-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.map-node-container:hover:not(.locked) {
+  transform: scale(1.1);
+}
+
+.map-node-button {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border: 3px solid var(--color-surface);
+  box-shadow: var(--shadow-md);
+  outline: none;
+  background-color: var(--color-surface);
+  transition: all 0.2s ease;
+}
+
+/* Estado: Disponível / Atual */
+.map-node-container.current .map-node-button {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  box-shadow: 0 0 0 6px var(--color-primary-light), var(--shadow-md);
+  animation: pulse 2s infinite;
+}
+
+/* Estado: Concluída */
+.map-node-container.completed .map-node-button {
+  background-color: var(--color-success);
+  color: #ffffff;
+}
+
+/* Estado: Bloqueada */
+.map-node-container.locked {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.map-node-container.locked .map-node-button {
+  background-color: #E2E8F0;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+
+/* Estado: Desafio Especial */
+.map-node-container.special .map-node-button {
+  background: linear-gradient(135deg, var(--color-accent-gold), #FF9900);
+  color: #ffffff;
+}
+
+.map-node-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-main);
+  text-align: center;
+  max-width: 110px;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0px rgba(0, 102, 255, 0.4), var(--shadow-md);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 102, 255, 0), var(--shadow-md);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(0, 102, 255, 0), var(--shadow-md);
+  }
+}

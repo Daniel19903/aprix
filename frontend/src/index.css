@@ -1,0 +1,48 @@
+:root {
+  /* Cores Base do Figma */
+  --bg-app: #060913;
+  --bg-card: #0b101d;
+  --bg-nav: #080d1a;
+  
+  /* Cores de Destaque Neon */
+  --neon-yellow: #ffd700;
+  --neon-cyan: #38bdf8;
+  --neon-purple: #a855f7;
+  --neon-green: #22c55e;
+  --text-muted: #64748b;
+  --text-light: #f8fafc;
+  
+  /* Sombras Neon */
+  --glow-yellow: 0 0 18px rgba(255, 215, 0, 0.65);
+  --glow-cyan: 0 0 15px rgba(56, 189, 248, 0.5);
+  --glow-purple: 0 0 20px rgba(168, 85, 247, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Container Estilo Smartphone / App Container */
+#root {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+}

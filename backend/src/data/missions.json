@@ -1,0 +1,25 @@
+[
+  {
+    "id": 1,
+    "title": "A Mesada",
+    "description": "Você recebeu sua mesada de R$ 100. O que você deve fazer primeiro?",
+    "xpReward": 100,
+    "choices": [
+      { "id": "a", "text": "Gastar tudo em jogos imediatamente", "isCorrect": false, "feedback": "Gastar tudo de vez deixa você sem reserva para o restante do mês!" },
+      { "id": "b", "text": "Separar uma parte para guardar e planejar os gastos", "isCorrect": true, "feedback": "Excelente! Guardar uma parte primeiro é a regra de ouro das finanças." },
+      { "id": "c", "text": "Emprestar tudo para um amigo", "isCorrect": false, "feedback": "Emprestar sem planejar pode te deixar na mão." }
+    ],
+    "nextMission": 2
+  },
+  {
+    "id": 2,
+    "title": "A Promoção",
+    "description": "Um tênis que você quer está com 20% de desconto, mas você só tem metade do valor. O que fazer?",
+    "xpReward": 150,
+    "choices": [
+      { "id": "a", "text": "Pedir dinheiro emprestado com juros", "isCorrect": false, "feedback": "Pegar emprestado com juros por impulso cria dívidas desnecessárias." },
+      { "id": "b", "text": "Economizar mais um pouco até ter o valor total", "isCorrect": true, "feedback": "Perfeito! Esperar e juntar o dinheiro é a atitude mais consciente." }
+    ],
+    "nextMission": null
+  }
+]

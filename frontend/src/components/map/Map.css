@@ -1,0 +1,174 @@
+/* Container de Scroll Vertical da Árvore */
+.tree-viewport {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 100px 1rem;
+  background-color: #060913;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.tree-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.tree-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #38bdf8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.tree-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Árvore de Baixo para Cima */
+.tree-map-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  align-items: center;
+  position: relative;
+}
+
+/* Camada da Árvore */
+.tree-layer-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Distribuição dos nós na camada (Linear, 2 Rotas ou 3 Rotas) */
+.layer-nodes-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  z-index: 2;
+}
+
+.layer-nodes-wrapper.count-1 { justify-content: center; }
+.layer-nodes-wrapper.count-2 { justify-content: space-around; padding: 0 10%; }
+.layer-nodes-wrapper.count-3 { justify-content: space-between; padding: 0 2%; }
+
+/* Galho Conector das Bifurcações */
+.tree-layer-row::after {
+  content: '';
+  position: absolute;
+  top: -2.5rem;
+  width: 3px;
+  height: 2.5rem;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.4), rgba(30, 41, 59, 0.8));
+  z-index: 1;
+}
+
+/* Botão Circular do Nó da Missão */
+.node-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.tree-node-btn {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  border: 3px solid #1e293b;
+  background-color: #0b101d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.node-icon {
+  font-size: 1.5rem;
+}
+
+/* ESTADOS VISUAIS DOS NÓS */
+
+/* 1. Bloqueado */
+.tree-node-btn.is-locked {
+  border-color: #1e293b;
+  background: #080d1a;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 2. Concluído */
+.tree-node-btn.is-completed {
+  border-color: #38bdf8;
+  background: #0c2340;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+}
+
+/* 3. Missão Atual (Efeito Pulsante Neon Amarelo) */
+.tree-node-btn.is-current {
+  border-color: #ffd700;
+  background: #1e293b;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 35px rgba(255, 215, 0, 0.4);
+  animation: treePulse 1.8s infinite alternate;
+}
+
+/* Indicadores de Posição do Jogador */
+.current-player-badge {
+  position: absolute;
+  top: -30px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #ffd700;
+  border-radius: 20px;
+  padding: 2px 8px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  white-space: nowrap;
+}
+
+.aprix-mini {
+  font-size: 0.75rem;
+}
+
+.badge-text {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #ffd700;
+  letter-spacing: 0.5px;
+}
+
+.node-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 6px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.label-highlight {
+  color: #ffd700;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes treePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  }
+  100% {
+    transform: scale(1.08);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
+  }
+}

@@ -1,0 +1,72 @@
+.aprix-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    position: relative;
+}
+
+/* Avatar do Mascote */
+.aprix-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.aprix-avatar:hover {
+    transform: scale(1.05);
+}
+
+/* Ícone/Expressão temporária */
+.aprix-expression{
+    font-size: 2.2rem;
+    user-select: none;
+}
+
+
+/* Balão de Fala */
+.aprix-speech-bubble {
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  max-width: 240px;
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Seta do balão de fala */
+.aprix-speech-bubble::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent var(--color-primary-light) transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

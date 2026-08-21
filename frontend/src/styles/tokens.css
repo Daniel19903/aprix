@@ -1,0 +1,51 @@
+:root{
+    /* ============================
+    Paleta de cores principal (APRIX)
+    =============================== */
+
+    --color-primary: #0066ff;             /* Azul principal*/
+    --color-primary-dark: #0046b8;       /* Azul Escuro */
+    --color-primary-light: #E6F0FF;      /* Azul bem claro*/
+
+    --color-secondary: #00c2ff;          /* Azul claro/Ciano */
+    --color-accent-gold: #ffc700;        /* Dourado para recompensas e XP */
+
+
+    /* FeedBack e Status */
+    --color-success: #00D16C;           /* Verde     - Vitória */
+    --color-error: #FF4757;             /* Vermelho  - perda de vida */
+    --color-warning: #FFA500;           /* Laranja   - atenção */
+
+
+/* ===================================
+     TIPOGRAFIA
+     =================================== */
+  --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-md: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.5rem;     /* 24px */
+  --font-size-2xl: 2rem;      /* 32px */
+  
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* ===================================
+     ESPAÇAMENTOS E BORDAS
+     =================================== */
+  --space-xs: 0.25rem;  /* 4px */
+  --space-sm: 0.5rem;   /* 8px */
+  --space-md: 1rem;     /* 16px */
+  --space-lg: 1.5rem;   /* 24px */
+  
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Efeito 3D para botões estilo jogo */
+  --button-3d-shadow: 0 4px 0 var(--color-primary-dark);
+}

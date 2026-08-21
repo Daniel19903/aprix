@@ -1,0 +1,494 @@
+import { useEffect, useState } from 'react'
+import { Lives } from './components/player/Lives'
+import { XPBar } from './components/player/XPBar'
+import { GameOver } from './components/player/GameOver'
+import { Map } from './components/map/Map'
+import { MissionRunner } from './components/mission/MissionRunner'
+import { BottomNav } from './components/nav/BottomNav'
+import { ProfileSetup } from './components/profile/ProfileSetup'
+import { HomeView } from './components/home/HomeView'
+import { DailyQuizCard } from './components/DailyQuizCard'
+import { fetchPlayerData, fetchMissions, submitAnswer } from './services/api'
+
+// --- COMPONENTE INTERNO: RANKING ---
+function RankingTab({ player, userProfile }) {
+  const leaderboard = [
+    { name: 'Ana Clara', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?top=longHair&eyes=happy&skinColor=f8d5c4', xp: 120 },
+    { name: 'Lucas Silva', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?top=shortHair&eyes=squint&skinColor=edb98a', xp: 95 },
+    { 
+      name: userProfile?.name || 'Você', 
+      avatar: userProfile?.avatarUrl || 'https://api.dicebear.com/7.x/avataaars/svg?top=shortHair&eyes=default', 
+      xp: player?.xp || 0, 
+      isCurrent: true 
+    },
+    { name: 'Gabriel Souza', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?top=curly&eyes=wink&skinColor=d08b5b', xp: 40 },
+    { name: 'Beatriz Lima', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?top=hat&eyes=surprised&skinColor=ae5d29', xp: 20 },
+  ].sort((a, b) => b.xp - a.xp)
+
+  return (
+    <div style={{ padding: '1rem', color: '#fff', maxWidth: '480px', margin: '0 auto' }}>
+      <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#38bdf8' }}>🏆 Ranking Geral (Beta)</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {leaderboard.map((user, idx) => (
+          <div
+            key={idx}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0.75rem 1rem',
+              borderRadius: '12px',
+              backgroundColor: user.isCurrent ? 'rgba(56, 189, 248, 0.15)' : '#0f172a',
+              border: user.isCurrent ? '2px solid #38bdf8' : '1px solid #334155'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontWeight: 'bold', width: '24px', color: idx === 0 ? '#facc15' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#b45309' : '#94a3b8' }}>
+                #{idx + 1}
+              </span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#1e293b', border: '1px solid #334155' }}>
+                <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%' }} />
+              </div>
+              <span style={{ fontSize: '0.85rem', fontWeight: user.isCurrent ? 'bold' : 'normal' }}>
+                {user.name} {user.isCurrent && '(Você)'}
+              </span>
+            </div>
+            <span style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 'bold' }}>
+              {user.xp} XP
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// --- COMPONENTE INTERNO: PRÊMIOS & COMPARTILHAMENTO ---
+function RewardsTab({ onAddXP }) {
+  const [sharesCount, setSharesCount] = useState(() => Number(localStorage.getItem('aprix_shares') || 0))
+  const [rewardClaimed, setRewardClaimed] = useState(() => localStorage.getItem('aprix_share_reward') === 'true')
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'APRIX - Jogo de Educação Financeira',
+      text: 'Vem jogar o APRIX e aprender finanças de forma simples e divertida!',
+      url: window.location.href
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(shareData.url)
+        alert('Link do jogo copiado para a área de transferência!')
+      }
+
+      const newCount = sharesCount + 1
+      setSharesCount(newCount)
+      localStorage.setItem('aprix_shares', newCount)
+
+      if (newCount >= 10 && !rewardClaimed) {
+        localStorage.setItem('aprix_share_reward', 'true')
+        setRewardClaimed(true)
+        if (onAddXP) onAddXP(50)
+        alert('🎉 Incrível! Você compartilhou com 10 amigos e conquistou +50 XP bônus!')
+      }
+    } catch (err) {
+      console.warn('Compartilhamento cancelado pelo usuário.')
+    }
+  }
+
+  return (
+    <div style={{ padding: '1rem', color: '#fff', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+      <h3 style={{ textAlign: 'center', margin: 0, color: '#facc15' }}>🎁 Prêmios e Bônus Extra</h3>
+
+      {/* CARD VIRALIZAR */}
+      <div style={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '16px', padding: '1.2rem' }}>
+        <h4 style={{ margin: '0 0 6px 0', color: '#38bdf8', fontSize: '0.95rem' }}>🚀 Viralize o APRIX Beta</h4>
+        <p style={{ margin: '0 0 12px 0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4' }}>
+          Divulgue o jogo para 10 amigos durante a fase Beta e resgate **+50 XP** instantâneos!
+        </p>
+
+        <div 
+          role="progressbar"
+          aria-valuenow={sharesCount}
+          aria-valuemin={0}
+          aria-valuemax={10}
+          style={{ backgroundColor: '#1e293b', height: '10px', borderRadius: '5px', overflow: 'hidden', marginBottom: '8px' }}
+        >
+          <div style={{ width: `${Math.min(100, (sharesCount / 10) * 100)}%`, backgroundColor: '#22c55e', height: '100%', transition: 'width 0.3s ease' }} />
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '12px' }}>
+          <span>Progresso: {sharesCount}/10 envios</span>
+          <span>{rewardClaimed ? '✅ +50 XP Resgatado' : 'Prêmio: +50 XP'}</span>
+        </div>
+
+        <button
+          onClick={handleShare}
+          disabled={rewardClaimed}
+          style={{
+            width: '100%',
+            padding: '0.8rem',
+            backgroundColor: rewardClaimed ? '#334155' : '#0284c7',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '10px',
+            fontWeight: 'bold',
+            fontSize: '0.85rem',
+            cursor: rewardClaimed ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {rewardClaimed ? 'Recompensa Concluída' : 'Compartilhar Agora 📲'}
+        </button>
+      </div>
+
+      {/* COMPONENTE DO QUIZ DIÁRIO INTEGRADO */}
+      <DailyQuizCard onScoreUpdate={() => onAddXP(10)} />
+    </div>
+  )
+}
+
+function App() {
+  const [player, setPlayer] = useState(null)
+  const [missions, setMissions] = useState([])
+  const [activeMissionId, setActiveMissionId] = useState(null)
+  const [currentTab, setCurrentTab] = useState('inicio')
+  const [loading, setLoading] = useState(true)
+
+  // Perfil do Jogador
+  const [userProfile, setUserProfile] = useState(() => {
+    const saved = localStorage.getItem('aprix_user_profile')
+    return saved ? JSON.parse(saved) : null
+  })
+
+  const baseMissionsTree = [
+    { id: 1, title: 'Missão 1: Primeiro Passo Financeiro' },
+    { id: 2, title: 'Missão 2: Criando um Orçamento' },
+    { id: 3, title: 'Missão 3: Evitando Dívidas' },
+    { id: 4, title: 'Missão 4: Reserva de Emergência' },
+    { id: 5, title: 'Missão 5: Entendendo os Juros' },
+    { id: 6, title: 'Missão 6: Investimentos Básicos' },
+    { id: 7, title: 'Missão 7: Planejando o Futuro' },
+    { id: 8, title: 'Missão 8: Multiplicando Patrimônio' },
+    { id: 9, title: 'Missão 9: Mestre das Finanças' },
+  ]
+
+  const calculateMissionsState = (allMissions, currentMissionId, completedMissions = []) => {
+    const completedSet = new Set(completedMissions.map(Number))
+    const currId = Number(currentMissionId)
+
+    const backendList = Array.isArray(allMissions) ? allMissions : []
+    const backendIds = new Set(backendList.map((m) => Number(m.id)))
+    const missingFromBackend = baseMissionsTree.filter((m) => !backendIds.has(Number(m.id)))
+    const sourceList = backendList.length > 0 ? [...backendList, ...missingFromBackend] : baseMissionsTree
+
+    return sourceList.map((m) => {
+      const mId = Number(m.id)
+      const isCompleted = completedSet.has(mId)
+      const isCurrent = mId === currId
+      const isLocked = !isCompleted && !isCurrent && mId > currId
+
+      return {
+        ...m,
+        id: mId,
+        isCompleted,
+        isCurrent,
+        isLocked
+      }
+    })
+  }
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const playerData = await fetchPlayerData()
+        const missionsDataRaw = await fetchMissions()
+
+        let missionsData = Array.isArray(missionsDataRaw)
+          ? missionsDataRaw
+          : Object.values(missionsDataRaw || {})
+
+        if (!playerData) {
+          const initialPlayer = {
+            lives: 3,
+            maxLives: 3,
+            xp: 0,
+            targetXP: 100,
+            level: 1,
+            currentMissionId: 1,
+            completedMissions: [],
+          }
+          setPlayer(initialPlayer)
+          setMissions(calculateMissionsState(baseMissionsTree, 1, []))
+          return
+        }
+
+        const currId = Number(playerData?.currentMissionId || 1)
+        const completedList = (playerData?.completedMissions || []).map(Number)
+
+        setPlayer(playerData)
+        setMissions(calculateMissionsState(missionsData, currId, completedList))
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  const handleWrongAnswer = () => {
+    setPlayer((prev) => {
+      if (!prev) return null
+      const currentLives = Number(prev.lives ?? 3)
+      const newLives = Math.max(0, currentLives - 1)
+
+      if (newLives === 0) setActiveMissionId(null)
+
+      return { ...prev, lives: newLives }
+    })
+  }
+
+  const handleLifeRecovered = (updatedData) => {
+    setPlayer((prev) => {
+      if (!prev) return null
+      const updatedLives = updatedData?.lives ?? Math.min(prev.maxLives || 3, (prev.lives || 0) + 1)
+      return { ...prev, ...updatedData, lives: updatedLives }
+    })
+  }
+
+  const handleSelectMission = (mission) => {
+    if (mission.isCompleted) {
+      alert(`Você já concluiu a Missão ${mission.id}!`)
+      return
+    }
+
+    if (mission.isLocked) {
+      alert(`A Missão ${mission.id} está bloqueada! Conclua a Missão ${mission.id - 1} primeiro.`)
+      return
+    }
+
+    setActiveMissionId(mission.id)
+  }
+
+  const handleAddDirectXP = (amount) => {
+    setPlayer((prev) => {
+      if (!prev) return null
+      let newXP = (prev.xp || 0) + amount
+      let newLevel = prev.level || 1
+      let targetXP = prev.targetXP || 100
+
+      while (newXP >= targetXP) {
+        newXP -= targetXP
+        newLevel += 1
+      }
+
+      return { ...prev, xp: newXP, level: newLevel }
+    })
+  }
+
+  const handleFinishMission = async (completedId, resultData) => {
+    if (!resultData || resultData.success !== true) {
+      console.warn('handleFinishMission chamado sem success === true, ignorando.', { completedId, resultData })
+      return
+    }
+
+    const numericCompletedId = Number(completedId)
+    const nextMissionId = numericCompletedId + 1
+    const earnedXP = Number(resultData.xpEarned ?? 0)
+
+    setPlayer((prev) => {
+      if (!prev) return null
+
+      let newXP = (prev.xp || 0) + earnedXP
+      let newLevel = prev.level || 1
+      let targetXP = prev.targetXP || 100
+
+      while (newXP >= targetXP) {
+        newXP -= targetXP
+        newLevel += 1
+      }
+
+      const prevCompleted = (prev.completedMissions || []).map(Number)
+      const updatedCompleted = Array.from(new Set([...prevCompleted, numericCompletedId]))
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        currentMissionId: nextMissionId,
+        completedMissions: updatedCompleted
+      }
+    })
+
+    setMissions((prevMissions) => {
+      const completedList = Array.from(
+        new Set([...prevMissions.filter(m => m.isCompleted).map(m => Number(m.id)), numericCompletedId])
+      )
+      return calculateMissionsState(prevMissions, nextMissionId, completedList)
+    })
+
+    setActiveMissionId(null)
+
+    try {
+      await submitAnswer(numericCompletedId, { completed: true, xpEarned: earnedXP })
+    } catch (error) {
+      console.warn('Erro ao salvar no servidor (progresso salvo localmente):', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <main style={{ padding: '2rem', textAlign: 'center', color: '#fff', backgroundColor: '#060913', minHeight: '100vh' }}>
+        <p>Carregando APRIX...</p>
+      </main>
+    )
+  }
+
+  const isGameOver = player && Number(player.lives) === 0
+  const activeMissionObj = missions.find((m) => m.isCurrent) || missions[0]
+
+  return (
+    <div style={{ backgroundColor: '#060913', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* MONTAGEM DE PERFIL / ONBOARDING BLOQUEANTE */}
+      {!userProfile && (
+        <ProfileSetup onComplete={(profile) => setUserProfile(profile)} />
+      )}
+
+      {/* HEADER PRINCIPAL OTIMIZADO PARA MOBILE */}
+      <header style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '0.6rem 0.8rem', 
+        backgroundColor: '#080d1a',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        gap: '8px',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        {userProfile ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: '1 1 auto' }}>
+            <div style={{ 
+              width: '32px', 
+              height: '32px', 
+              minWidth: '32px', 
+              borderRadius: '50%', 
+              overflow: 'hidden', 
+              border: '2px solid #38bdf8', 
+              backgroundColor: '#1e293b',
+              flexShrink: 0 
+            }}>
+              <img src={userProfile.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%' }} />
+            </div>
+            <span style={{ 
+              color: '#fff', 
+              fontSize: '0.8rem', 
+              fontWeight: 'bold',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '120px'
+            }}>
+              {userProfile.name}
+            </span>
+          </div>
+        ) : (
+          <div style={{ flex: '1 1 auto' }} />
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <Lives currentLives={player?.lives} maxLives={player?.maxLives} onLifeRecovered={handleLifeRecovered} />
+          <XPBar currentXP={player?.xp} targetXP={player?.targetXP} level={player?.level} />
+        </div>
+      </header>
+
+      {/* CONTEÚDO PRINCIPAL */}
+      <main style={{ flex: 1, paddingBottom: '80px' }}>
+        {isGameOver ? (
+          <GameOver onLifeRecovered={handleLifeRecovered} />
+        ) : (
+          <>
+            {currentTab === 'inicio' && (
+              <HomeView 
+                player={userProfile} 
+                currentMission={activeMissionObj} 
+                onPlayMission={(mission) => handleSelectMission(mission)} 
+              />
+            )}
+
+            {currentTab === 'jornada' && (
+              <Map missions={missions} onSelectMission={handleSelectMission} />
+            )}
+
+            {currentTab === 'ranking' && (
+              <RankingTab player={player} userProfile={userProfile} />
+            )}
+
+            {currentTab === 'premios' && (
+              <RewardsTab onAddXP={handleAddDirectXP} />
+            )}
+
+            {currentTab === 'perfil' && (
+              <div style={{ padding: '1.5rem', textAlign: 'center', color: '#fff', maxWidth: '400px', margin: '0 auto' }}>
+                <h3 style={{ color: '#38bdf8', marginBottom: '1rem' }}>👤 Meu Perfil</h3>
+                
+                {userProfile && (
+                  <div style={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '16px', padding: '1.2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #38bdf8', backgroundColor: '#1e293b' }}>
+                      <img src={userProfile.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%' }} />
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{userProfile.name}</h4>
+                    
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-around', marginTop: '8px', borderTop: '1px solid #1e293b', paddingTop: '10px', fontSize: '0.85rem', color: '#cbd5e1' }}>
+                      <span><strong>Nível:</strong> {player?.level}</span>
+                      <span><strong>XP Total:</strong> {player?.xp}</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (confirm('Deseja refazer seu avatar?')) {
+                          localStorage.removeItem('aprix_user_profile')
+                          setUserProfile(null)
+                        }
+                      }}
+                      style={{
+                        marginTop: '10px',
+                        padding: '0.6rem 1rem',
+                        backgroundColor: '#1e293b',
+                        border: '1px solid #334155',
+                        color: '#f87171',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Editar Avatar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* MISSION RUNNER */}
+      {activeMissionId && (
+        <MissionRunner
+          missionId={activeMissionId}
+          onFinishMission={handleFinishMission}
+          onError={handleWrongAnswer}
+          onClose={() => setActiveMissionId(null)}
+        />
+      )}
+
+      <BottomNav activeTab={currentTab} onTabChange={setCurrentTab} />
+    </div>
+  )
+}
+
+export default App
