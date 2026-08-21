@@ -227,3 +227,6 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`🚀 Backend do Aprix rodando localmente em http://localhost:${PORT}`);
   });
 }
+
+
+module.exports = app;
