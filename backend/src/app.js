@@ -2,27 +2,24 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@libsql/client');
-
+ 
 const app = express();
-
+ 
 // Configuração do CORS para permitir o frontend na Vercel e dev local
 app.use(cors({
   origin: '*', // Permite chamadas do frontend na Vercel
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Responder imediatamente a requisições preflight do navegador
-app.options('*', cors());
-
+ 
 app.use(express.json());
-
+ 
 // --- CONEXÃO COM O TURSO (BANCO EM NUVEM) ---
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
-
+ 
 // Inicialização da tabela de ranking no Turso
 async function initDb() {
   try {
@@ -40,7 +37,7 @@ async function initDb() {
   }
 }
 initDb();
-
+ 
 // --- ESTADO INICIAL DO JOGADOR LOCAL ---
 let player = {
   lives: 3,
@@ -51,7 +48,7 @@ let player = {
   currentMissionId: "1",
   completedMissions: []
 };
-
+ 
 // --- BASE DE DADOS DAS MISSÕES ---
 const missionsData = {
   "1": {
@@ -94,7 +91,7 @@ const missionsData = {
     }
   }
 };
-
+ 
 function processXP(amount) {
   player.xp += amount;
   while (player.xp >= player.targetXP) {
@@ -102,26 +99,26 @@ function processXP(amount) {
     player.level += 1;
   }
 }
-
+ 
 // --- ROTAS DO JOGADOR LOCAL & MISSÕES (Suporta /api e / direto) ---
-
+ 
 // Player GET
 const getPlayerHandler = (req, res) => res.json(player);
 app.get('/player', getPlayerHandler);
 app.get('/api/player', getPlayerHandler);
-
+ 
 // Player Answer POST
 const postAnswerHandler = (req, res) => {
   const { missionId } = req.body;
   const mission = missionsData[missionId];
   const xpGained = mission ? mission.xpReward : 10;
-
+ 
   processXP(xpGained);
-
+ 
   if (missionId && !player.completedMissions.includes(String(missionId))) {
     player.completedMissions.push(String(missionId));
   }
-
+ 
   res.json({
     success: true,
     message: "Resposta processada com sucesso!",
@@ -132,12 +129,12 @@ const postAnswerHandler = (req, res) => {
 };
 app.post('/player/answer', postAnswerHandler);
 app.post('/api/player/answer', postAnswerHandler);
-
+ 
 // Missions GET
 const getMissionsHandler = (req, res) => res.json(Object.values(missionsData));
 app.get('/missions', getMissionsHandler);
 app.get('/api/missions', getMissionsHandler);
-
+ 
 // Mission Single GET
 const getMissionByIdHandler = (req, res) => {
   const { id } = req.params;
@@ -152,25 +149,25 @@ const getMissionByIdHandler = (req, res) => {
       targetObjects: [{ id: "t1", name: "Objetivo Principal" }]
     }
   };
-
+ 
   res.json({ success: true, mission });
 };
 app.get('/missions/:id', getMissionByIdHandler);
 app.get('/api/missions/:id', getMissionByIdHandler);
-
+ 
 // Mission Complete POST
 const postCompleteMissionHandler = (req, res) => {
   const { id } = req.params;
   const mission = missionsData[id];
   const xpGained = mission ? mission.xpReward : 10;
   const nextMissions = mission ? mission.next : [];
-
+ 
   processXP(xpGained);
-
+ 
   if (!player.completedMissions.includes(id)) {
     player.completedMissions.push(id);
   }
-
+ 
   res.json({
     success: true,
     message: "Missão concluída com sucesso!",
@@ -182,14 +179,14 @@ const postCompleteMissionHandler = (req, res) => {
 };
 app.post('/missions/:id/complete', postCompleteMissionHandler);
 app.post('/api/missions/:id/complete', postCompleteMissionHandler);
-
+ 
 // Daily Quiz POST
 const postDailyQuizHandler = (req, res) => {
   const { xpEarned } = req.body;
   const gained = xpEarned || 10;
-
+ 
   processXP(gained);
-
+ 
   return res.status(200).json({
     success: true,
     message: 'Quiz diário concluído com sucesso!',
@@ -199,7 +196,7 @@ const postDailyQuizHandler = (req, res) => {
 };
 app.post('/player/daily-quiz', postDailyQuizHandler);
 app.post('/api/player/daily-quiz', postDailyQuizHandler);
-
+ 
 // --- ROTAS DE RANKING COM TURSO ---
 const getLeaderboardHandler = async (req, res) => {
   try {
@@ -212,17 +209,17 @@ const getLeaderboardHandler = async (req, res) => {
 };
 app.get('/leaderboard', getLeaderboardHandler);
 app.get('/api/leaderboard', getLeaderboardHandler);
-
+ 
 const postScoreHandler = async (req, res) => {
   const { playerId, name, avatar, xp } = req.body;
-
+ 
   if (!name) {
     return res.status(400).json({ error: 'Nome do jogador é obrigatório' });
   }
-
+ 
   const numericXP = Number.isInteger(xp) ? xp : Number(xp) || 0;
   const id = playerId || name.toLowerCase().replace(/\s+/g, '_');
-
+ 
   try {
     await db.execute({
       sql: `
@@ -235,7 +232,7 @@ const postScoreHandler = async (req, res) => {
       `,
       args: [id, name, avatar || '', numericXP]
     });
-
+ 
     res.json({ success: true, id, name, xp: numericXP });
   } catch (err) {
     console.error('Erro ao atualizar o ranking no Turso:', err);
@@ -244,7 +241,7 @@ const postScoreHandler = async (req, res) => {
 };
 app.post('/player/score', postScoreHandler);
 app.post('/api/player/score', postScoreHandler);
-
+ 
 // Roda servidor local apenas fora do ambiente da Vercel
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
@@ -252,5 +249,5 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`🚀 Backend do Aprix rodando localmente em http://localhost:${PORT}`);
   });
 }
-
+ 
 module.exports = app;
