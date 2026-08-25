@@ -7,10 +7,13 @@ const app = express();
 
 // Configuração do CORS para permitir o frontend na Vercel e dev local
 app.use(cors({
-  origin: ['https://aprix-sepia.vercel.app', 'http://localhost:5173'],
+  origin: '*', // Permite chamadas do frontend na Vercel
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Responder imediatamente a requisições preflight do navegador
+app.options('*', cors());
 
 app.use(express.json());
 
@@ -100,12 +103,15 @@ function processXP(amount) {
   }
 }
 
-// --- ROTAS DO JOGADOR LOCAL & MISSÕES ---
-app.get('/api/player', (req, res) => {
-  res.json(player);
-});
+// --- ROTAS DO JOGADOR LOCAL & MISSÕES (Suporta /api e / direto) ---
 
-app.post('/api/player/answer', (req, res) => {
+// Player GET
+const getPlayerHandler = (req, res) => res.json(player);
+app.get('/player', getPlayerHandler);
+app.get('/api/player', getPlayerHandler);
+
+// Player Answer POST
+const postAnswerHandler = (req, res) => {
   const { missionId } = req.body;
   const mission = missionsData[missionId];
   const xpGained = mission ? mission.xpReward : 10;
@@ -123,13 +129,17 @@ app.post('/api/player/answer', (req, res) => {
     xpGained: xpGained,
     aprixMessage: mission ? mission.aprixMessage : "Parabéns por concluir!"
   });
-});
+};
+app.post('/player/answer', postAnswerHandler);
+app.post('/api/player/answer', postAnswerHandler);
 
-app.get('/api/missions', (req, res) => {
-  res.json(Object.values(missionsData));
-});
+// Missions GET
+const getMissionsHandler = (req, res) => res.json(Object.values(missionsData));
+app.get('/missions', getMissionsHandler);
+app.get('/api/missions', getMissionsHandler);
 
-app.get('/api/missions/:id', (req, res) => {
+// Mission Single GET
+const getMissionByIdHandler = (req, res) => {
   const { id } = req.params;
   const mission = missionsData[id] || {
     id: id,
@@ -144,9 +154,12 @@ app.get('/api/missions/:id', (req, res) => {
   };
 
   res.json({ success: true, mission });
-});
+};
+app.get('/missions/:id', getMissionByIdHandler);
+app.get('/api/missions/:id', getMissionByIdHandler);
 
-app.post('/api/missions/:id/complete', (req, res) => {
+// Mission Complete POST
+const postCompleteMissionHandler = (req, res) => {
   const { id } = req.params;
   const mission = missionsData[id];
   const xpGained = mission ? mission.xpReward : 10;
@@ -166,9 +179,12 @@ app.post('/api/missions/:id/complete', (req, res) => {
     nextMissions: nextMissions,
     aprixMessage: mission ? mission.aprixMessage : "Parabéns por concluir mais uma etapa!"
   });
-});
+};
+app.post('/missions/:id/complete', postCompleteMissionHandler);
+app.post('/api/missions/:id/complete', postCompleteMissionHandler);
 
-app.post('/api/player/daily-quiz', (req, res) => {
+// Daily Quiz POST
+const postDailyQuizHandler = (req, res) => {
   const { xpEarned } = req.body;
   const gained = xpEarned || 10;
 
@@ -180,10 +196,12 @@ app.post('/api/player/daily-quiz', (req, res) => {
     xpEarned: gained,
     playerState: player
   });
-});
+};
+app.post('/player/daily-quiz', postDailyQuizHandler);
+app.post('/api/player/daily-quiz', postDailyQuizHandler);
 
 // --- ROTAS DE RANKING COM TURSO ---
-app.get('/api/leaderboard', async (req, res) => {
+const getLeaderboardHandler = async (req, res) => {
   try {
     const result = await db.execute('SELECT * FROM leaderboard ORDER BY xp DESC');
     res.json(result.rows);
@@ -191,9 +209,11 @@ app.get('/api/leaderboard', async (req, res) => {
     console.error('Erro ao buscar o ranking no Turso:', err);
     res.status(500).json({ error: 'Erro ao buscar o ranking' });
   }
-});
+};
+app.get('/leaderboard', getLeaderboardHandler);
+app.get('/api/leaderboard', getLeaderboardHandler);
 
-app.post('/api/player/score', async (req, res) => {
+const postScoreHandler = async (req, res) => {
   const { playerId, name, avatar, xp } = req.body;
 
   if (!name) {
@@ -221,7 +241,9 @@ app.post('/api/player/score', async (req, res) => {
     console.error('Erro ao atualizar o ranking no Turso:', err);
     res.status(500).json({ error: 'Erro ao atualizar o ranking' });
   }
-});
+};
+app.post('/player/score', postScoreHandler);
+app.post('/api/player/score', postScoreHandler);
 
 // Roda servidor local apenas fora do ambiente da Vercel
 if (process.env.NODE_ENV !== 'production') {
