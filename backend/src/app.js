@@ -1,10 +1,17 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@libsql/client');
-require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Configuração do CORS para permitir o frontend na Vercel e dev local
+app.use(cors({
+  origin: ['https://aprix-sepia.vercel.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // --- CONEXÃO COM O TURSO (BANCO EM NUVEM) ---
@@ -161,7 +168,6 @@ app.post('/api/missions/:id/complete', (req, res) => {
   });
 });
 
-// Endpoint para registrar a conclusão do Quiz Diário
 app.post('/api/player/daily-quiz', (req, res) => {
   const { xpEarned } = req.body;
   const gained = xpEarned || 10;
@@ -176,7 +182,7 @@ app.post('/api/player/daily-quiz', (req, res) => {
   });
 });
 
-// --- ROTAS DE RANKING COM TURSO (ASYNC/AWAIT) ---
+// --- ROTAS DE RANKING COM TURSO ---
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const result = await db.execute('SELECT * FROM leaderboard ORDER BY xp DESC');
@@ -217,9 +223,6 @@ app.post('/api/player/score', async (req, res) => {
   }
 });
 
-// Exporta o aplicativo Express para ser consumido como Vercel Serverless Function
-module.exports = app;
-
 // Roda servidor local apenas fora do ambiente da Vercel
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
@@ -227,6 +230,5 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`🚀 Backend do Aprix rodando localmente em http://localhost:${PORT}`);
   });
 }
-
 
 module.exports = app;

@@ -8,7 +8,7 @@
 //
 // Se preferir apontar manualmente (ex: backend em outro domínio), defina
 // VITE_API_URL no seu .env — ele tem prioridade sobre o padrão relativo.
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://aprix-backend.vercel.app';
  
 // 2. URL do Google Apps Script (Webhook Planilha)
 // 👉 Cole aqui a URL real do seu Apps Script publicado (Implantar > Nova implantação > Web app)
