@@ -2,13 +2,13 @@ import { useState } from 'react'
 
 export function ProfileSetup({ onComplete }) {
   const [name, setName] = useState('')
-  const [gender, setGender] = useState('boy') // 'boy' ou 'girl'
-  const [skinColor, setSkinColor] = useState('f8d5c4')
+  const [gender, setGender] = useState('boy')
+  const [skinColor, setSkinColor] = useState('edb98a')
   const [top, setTop] = useState('shortFlat')
   const [eyes, setEyes] = useState('happy')
   const [accessories, setAccessories] = useState('none')
 
-  // --- OPÇÕES DE PELE ---
+  // --- VALORES DE SKINCOLOR COMPATÍVEIS COM O DICEBEAR AVATAAARS ---
   const skinOptions = [
     { label: 'Clara', value: 'f8d5c4' },
     { label: 'Morena Clara', value: 'edb98a' },
@@ -17,25 +17,25 @@ export function ProfileSetup({ onComplete }) {
     { label: 'Negra', value: '614335' }
   ]
 
-  // --- OPÇÕES DE CABELO POR GÊNERO (VALORES OFICIAIS DICEBEAR AVATAAARS) ---
+  // --- VALORES DE TOP VÁLIDOS NO SCHEMA DO DICEBEAR AVATAAARS ---
   const hairOptionsByGender = {
     boy: [
       { label: 'Cabelo Curto', value: 'shortFlat' },
-      { label: 'Topete / Estiloso', value: 'shortSides' },
+      { label: 'Topete / Estiloso', value: 'shortWaved' },
       { label: 'Cabelo Cacheado', value: 'shortCurly' },
       { label: 'Chapéu / Boné', value: 'hat' },
-      { label: 'Tapa-Olho', value: 'eyepatch' }
+      { label: 'Cabelo Espetado', value: 'frizzle' }
     ],
     girl: [
-      { label: 'Cabelo Longo', value: 'longStraight' },
+      { label: 'Cabelo Longo', value: 'straight01' },
       { label: 'Cabelo Cacheado', value: 'curly' },
       { label: 'Chanel / Bob', value: 'bob' },
       { label: 'Cabelo Ondulado', value: 'curvy' },
-      { label: 'Chapéu / Boné', value: 'hat' }
+      
     ]
   }
 
-  // --- VALORES CORRIGIDOS DOS OLHOS ---
+  // --- OPÇÕES DE OLHOS ---
   const eyesOptions = [
     { label: 'Feliz', value: 'happy' },
     { label: 'Piscando', value: 'wink' },
@@ -44,24 +44,41 @@ export function ProfileSetup({ onComplete }) {
     { label: 'Padrão', value: 'default' }
   ]
 
+  // --- OPÇÕES DE ACESSÓRIOS ---
   const accessoriesOptions = [
     { label: 'Nenhum', value: 'none' },
     { label: 'Óculos Mágico', value: 'kurt' },
     { label: 'Óculos Escuros', value: 'sunglasses' },
-    { label: 'Óculos Redondo', value: 'round' }
+    { label: 'Óculos Redondo', value: 'round' },
+    { label: 'Tapa-Olho', value: 'eyepatch' }
   ]
 
-  // Handler para troca de gênero ajustando o primeiro cabelo padrão do gênero selecionado
   const handleGenderChange = (newGender) => {
     setGender(newGender)
     setTop(hairOptionsByGender[newGender][0].value)
   }
 
-  // Monta a URL válida do DiceBear (Corrigido o parâmetro eyes=)
-  const facialHairProb = gender === 'girl' ? 0 : 20
-  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?skinColor=${skinColor}&top=${top}&eyes=${eyes}&facialHairProbability=${facialHairProb}${
-    accessories !== 'none' ? `&accessories=${accessories}&accessoriesProbability=100` : '&accessoriesProbability=0'
-  }`
+  // URL FORMATADA COM OS PARÂMETROS CORRETOS
+  const buildAvatarUrl = () => {
+    const baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg'
+    const query = new URLSearchParams()
+
+    query.append('skinColor', skinColor)
+    query.append('top', top)
+    query.append('eyes', eyes)
+    query.append('facialHairProbability', '0')
+
+    if (accessories && accessories !== 'none') {
+      query.append('accessories', accessories)
+      query.append('accessoriesProbability', '100')
+    } else {
+      query.append('accessoriesProbability', '0')
+    }
+
+    return `${baseUrl}?${query.toString()}`
+  }
+
+  const avatarUrl = buildAvatarUrl()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -77,6 +94,16 @@ export function ProfileSetup({ onComplete }) {
     }
 
     localStorage.setItem('aprix_user_profile', JSON.stringify(profileData))
+
+    const initialPlayerData = {
+      currentMission: '1',
+      level: 1,
+      xp: 0,
+      lives: 3,
+      maxLives: 3
+    }
+    localStorage.setItem('aprix_player_data', JSON.stringify(initialPlayerData))
+
     if (onComplete) onComplete(profileData)
   }
 
@@ -120,7 +147,10 @@ export function ProfileSetup({ onComplete }) {
           border: '3px solid #38bdf8',
           boxShadow: '0 0 15px rgba(56, 189, 248, 0.4)',
           overflow: 'hidden',
-          backgroundColor: '#1e293b'
+          backgroundColor: '#1e293b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
           <img 
             src={avatarUrl} 

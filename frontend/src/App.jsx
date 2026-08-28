@@ -186,7 +186,7 @@ function App() {
 
   // Lógica Dinâmica e Escalável de Cálculo de Estados de Missão
   const calculateMissionsState = (allMissions, currentMissionId, completedMissions = []) => {
-    const completedSet = new Set(completedMissions.map(Number))
+    const completedSet = new Set(completedMissions.map((id) => Number(id)))
     const currId = Number(currentMissionId)
 
     const backendList = Array.isArray(allMissions) ? allMissions : []
@@ -198,9 +198,6 @@ function App() {
       const mId = Number(m.id)
       const isCompleted = completedSet.has(mId)
       
-      // Regra Escalável:
-      // Desbloqueado se for a 1ª missão, se já foi concluída, se for a missão atual do usuário
-      // OU se a missão anterior (mId - 1) foi concluída.
       const isUnlocked = mId === 1 || isCompleted || mId === currId || completedSet.has(mId - 1)
       const isLocked = !isUnlocked
       const isCurrent = mId === currId || (!isCompleted && isUnlocked)
@@ -232,36 +229,45 @@ function App() {
           ? missionsDataRaw
           : Object.values(missionsDataRaw || {})
 
-        // Pega do localStorage
         const savedPlayerLocal = localStorage.getItem('aprix_player_data')
         const localPlayerData = savedPlayerLocal ? JSON.parse(savedPlayerLocal) : null
 
-        // FUSÃO DE DADOS (LOCAL + SERVIDO): Nunca perde o progresso salvo
-        const localCompleted = (localPlayerData?.completedMissions || []).map(Number)
-        const backendCompleted = (playerDataBackend?.completedMissions || []).map(Number)
+        // ✅ Se não há perfil definido, forçar conta novinha iniciando no Nível 1 e Missão 1
+        const hasUserProfile = Boolean(localStorage.getItem('aprix_user_profile'))
 
-        // Junta as duas listas de concluídas sem duplicatas
-        const mergedCompleted = Array.from(new Set([...localCompleted, ...backendCompleted]))
+        let finalCompleted = []
+        let activePlayerData = null
 
-        // ✅ FIX: Se não houver progresso salvo, mantém o array vazio (inicia na Missão 1)
-        const finalCompleted = mergedCompleted
+        if (!hasUserProfile) {
+          activePlayerData = {
+            lives: 3,
+            maxLives: 3,
+            xp: 0,
+            targetXP: 100,
+            level: 1,
+            currentMissionId: 1,
+            completedMissions: []
+          }
+        } else {
+          const localCompleted = (localPlayerData?.completedMissions || []).map((id) => Number(id))
+          const backendCompleted = (playerDataBackend?.completedMissions || []).map((id) => Number(id))
 
-        // Calcula a maior missão desbloqueada
-        const maxCompletedId = finalCompleted.length > 0 ? Math.max(...finalCompleted) : 0
-        const calculatedNextMission = maxCompletedId + 1
+          finalCompleted = Array.from(new Set([...localCompleted, ...backendCompleted]))
+          const maxCompletedId = finalCompleted.length > 0 ? Math.max(...finalCompleted) : 0
+          const calculatedNextMission = maxCompletedId + 1
 
-        const activePlayerData = {
-          lives: playerDataBackend?.lives ?? localPlayerData?.lives ?? 3,
-          maxLives: playerDataBackend?.maxLives ?? localPlayerData?.maxLives ?? 3,
-          xp: Math.max(playerDataBackend?.xp || 0, localPlayerData?.xp || 0),
-          targetXP: playerDataBackend?.targetXP ?? localPlayerData?.targetXP ?? 100,
-          level: Math.max(playerDataBackend?.level || 1, localPlayerData?.level || 1),
-          currentMissionId: Math.max(
-            Number(playerDataBackend?.currentMissionId || 1),
-            Number(localPlayerData?.currentMissionId || 1),
-            calculatedNextMission
-          ),
-          completedMissions: finalCompleted,
+          const backendCurr = playerDataBackend?.currentMissionId ? Number(playerDataBackend.currentMissionId) : 1
+          const localCurr = localPlayerData?.currentMissionId ? Number(localPlayerData.currentMissionId) : 1
+
+          activePlayerData = {
+            lives: Number(playerDataBackend?.lives ?? localPlayerData?.lives ?? 3),
+            maxLives: Number(playerDataBackend?.maxLives ?? localPlayerData?.maxLives ?? 3),
+            xp: Math.max(Number(playerDataBackend?.xp || 0), Number(localPlayerData?.xp || 0)),
+            targetXP: Number(playerDataBackend?.targetXP ?? localPlayerData?.targetXP ?? 100),
+            level: Math.max(Number(playerDataBackend?.level || 1), Number(localPlayerData?.level || 1)),
+            currentMissionId: Math.max(backendCurr, localCurr, calculatedNextMission),
+            completedMissions: finalCompleted,
+          }
         }
 
         // Salva de volta no LocalStorage para sincronizar
@@ -320,9 +326,9 @@ function App() {
   const handleAddDirectXP = (amount) => {
     setPlayer((prev) => {
       if (!prev) return null
-      let newXP = (prev.xp || 0) + amount
-      let newLevel = prev.level || 1
-      let targetXP = prev.targetXP || 100
+      let newXP = Number(prev.xp || 0) + Number(amount)
+      let newLevel = Number(prev.level || 1)
+      let targetXP = Number(prev.targetXP || 100)
 
       while (newXP >= targetXP) {
         newXP -= targetXP
@@ -350,27 +356,26 @@ function App() {
     setPlayer((prev) => {
       if (!prev) return null
 
-      let newXP = (prev.xp || 0) + earnedXP
-      let newLevel = prev.level || 1
-      let targetXP = prev.targetXP || 100
+      let newXP = Number(prev.xp || 0) + earnedXP
+      let newLevel = Number(prev.level || 1)
+      let targetXP = Number(prev.targetXP || 100)
 
       while (newXP >= targetXP) {
         newXP -= targetXP
         newLevel += 1
       }
 
-      const prevCompleted = (prev.completedMissions || []).map(Number)
+      const prevCompleted = (prev.completedMissions || []).map((id) => Number(id))
       const updatedCompleted = Array.from(new Set([...prevCompleted, numericCompletedId]))
 
       updatedPlayer = {
         ...prev,
         xp: newXP,
         level: newLevel,
-        currentMissionId: Math.max(prev.currentMissionId || 1, nextMissionId),
+        currentMissionId: Math.max(Number(prev.currentMissionId || 1), nextMissionId),
         completedMissions: updatedCompleted
       }
 
-      // Garante salvamento síncrono no localStorage
       localStorage.setItem('aprix_player_data', JSON.stringify(updatedPlayer))
 
       return updatedPlayer
@@ -390,6 +395,25 @@ function App() {
     }
   }
 
+  // ✅ Função chamada após finalizar a criação do perfil/avatar
+  const handleProfileComplete = (profile) => {
+    setUserProfile(profile)
+
+    const initialData = {
+      lives: 3,
+      maxLives: 3,
+      xp: 0,
+      targetXP: 100,
+      level: 1,
+      currentMissionId: 1,
+      completedMissions: []
+    }
+
+    localStorage.setItem('aprix_player_data', JSON.stringify(initialData))
+    setPlayer(initialData)
+    setMissions(calculateMissionsState(baseMissionsTree, 1, []))
+  }
+
   if (loading) {
     return (
       <main style={{ padding: '2rem', textAlign: 'center', color: '#fff', backgroundColor: '#060913', minHeight: '100vh' }}>
@@ -406,7 +430,7 @@ function App() {
       
       {/* MONTAGEM DE PERFIL / ONBOARDING BLOQUEANTE */}
       {!userProfile && (
-        <ProfileSetup onComplete={(profile) => setUserProfile(profile)} />
+        <ProfileSetup onComplete={handleProfileComplete} />
       )}
 
       {/* HEADER PRINCIPAL OTIMIZADO PARA MOBILE */}
@@ -503,6 +527,7 @@ function App() {
                       onClick={() => {
                         if (confirm('Deseja refazer seu avatar?')) {
                           localStorage.removeItem('aprix_user_profile')
+                          localStorage.removeItem('aprix_player_data')
                           setUserProfile(null)
                         }
                       }}
