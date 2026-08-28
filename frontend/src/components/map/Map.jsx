@@ -1,28 +1,28 @@
 import React from 'react'
-
+ 
 export function Map({ missions = [], onSelectMission }) {
   // Ordena por ID numérico para garantir a sequência correta
   const sortedMissions = [...missions].sort((a, b) => Number(a.id) - Number(b.id))
-
+ 
   // Identifica o ID da missão atual (onde o jogador está)
   const currentMission = sortedMissions.find((m) => m.isCurrent) || 
                          sortedMissions.find((m) => !m.isCompleted) || 
                          sortedMissions[0]
-
+ 
   const currentId = currentMission ? Number(currentMission.id) : 1
-
+ 
   return (
     <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
       <h2 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '1rem' }}>Árvore do Conhecimento</h2>
-
-      <div style={{ display: 'flex', flexDirection: 'column-reverse', alignItems: 'center', gap: '2.5rem', position: 'relative' }}>
+ 
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2.5rem', position: 'relative' }}>
         {sortedMissions.map((mission, index) => {
           const mId = Number(mission.id)
           const isCompleted = Boolean(mission.isCompleted)
           const isCurrentNode = mId === currentId
           // Uma missão está liberada se já foi feita ou se é a missão atual
           const isUnlocked = isCompleted || isCurrentNode
-
+ 
           return (
             <div key={mission.id || index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
               
@@ -47,7 +47,7 @@ export function Map({ missions = [], onSelectMission }) {
                   🦩 VOCÊ ESTÁ AQUI
                 </div>
               )}
-
+ 
               {/* Botão do Nó da Missão */}
               <button
                 onClick={() => onSelectMission({ ...mission, isLocked: !isUnlocked })}
@@ -70,16 +70,16 @@ export function Map({ missions = [], onSelectMission }) {
                 {isCompleted && (
                   <span style={{ color: '#22c55e', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
                 )}
-
+ 
                 {!isCompleted && !isUnlocked && (
                   <span style={{ fontSize: '1.2rem' }}>🔒</span>
                 )}
-
+ 
                 {isCurrentNode && !isCompleted && (
                   <span style={{ fontSize: '1.2rem' }}>🎯</span>
                 )}
               </button>
-
+ 
               {/* Rótulo do Nome da Missão */}
               <span
                 style={{
@@ -98,3 +98,4 @@ export function Map({ missions = [], onSelectMission }) {
     </div>
   )
 }
+ 

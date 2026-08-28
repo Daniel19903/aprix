@@ -8,6 +8,9 @@ import * as Mission6PayYourselfFirstModule from './engines/Mission6PayYourselfFi
 import * as Mission7BalancedBudgetModule from './engines/Mission7BalancedBudget'
 import * as Mission8PriorityRankingModule from './engines/Mission8PriorityRanking'
 import * as Mission9DebtMazeModule from './engines/Mission9DebtMaze'
+import * as Mission10MoneyDetectiveModule from './engines/Mission10MoneyDetective'
+import * as Mission11choiceofnowModule from './engines/Mission11choiceofnow'
+import * as Mission12ThoughtDecoderModule from './engines/Mission12ThoughtDecoder'
 // 👉 NOVA MISSÃO — PASSO 1: importe o módulo da nova engine aqui, seguindo o
 // mesmo padrão (import * as XModule from './engines/ArquivoDaMissao')
 // Exemplo:
@@ -25,6 +28,9 @@ const Mission6PayYourselfFirst = Mission6PayYourselfFirstModule.Mission6PayYours
 const Mission7BalancedBudget = Mission7BalancedBudgetModule.Mission7BalancedBudget || Mission7BalancedBudgetModule.default
 const Mission8PriorityRanking = Mission8PriorityRankingModule.Mission8PriorityRanking || Mission8PriorityRankingModule.default
 const Mission9DebtMaze = Mission9DebtMazeModule.Mission9DebtMaze || Mission9DebtMazeModule.default
+const Mission10MoneyDetective = Mission10MoneyDetectiveModule.Mission10MoneyDetective || Mission10MoneyDetectiveModule.default
+const Mission11choiceofnow = Mission11choiceofnowModule.Mission11choiceofnow || Mission11choiceofnowModule.default
+const Mission12ThoughtDecoder = Mission12ThoughtDecoderModule.Mission12ThoughtDecoder || Mission12ThoughtDecoderModule.default
 // 👉 NOVA MISSÃO — PASSO 2: resolva o componente aqui, mesma linha do padrão acima.
 // Exemplo:
 // const Mission4LeakHunt = Mission4LeakHuntModule.Mission4LeakHunt || Mission4LeakHuntModule.default
@@ -59,7 +65,9 @@ export function MissionRunner({ missionId, onFinishMission, onError, onClose }) 
     7: 'ORÇAMENTO EM EQUILÍBRIO',
     8: 'PRIORIDADE MÁXIMA',
     9: 'O LABIRINTO DAS DÍVIDAS',
-
+    10: 'O DINHEIRO DESAPARECIDO',
+    11: 'A ESCOLHA DE AGORA',
+    12: 'O CÓDIGO DO DINHEIRO',
     // 👉 NOVA MISSÃO — PASSO 3: adicione o título aqui, ex:
     // 4: 'CAÇA AO VAZAMENTO',
   }
@@ -105,6 +113,12 @@ export function MissionRunner({ missionId, onFinishMission, onError, onClose }) 
          return <Mission8PriorityRanking onComplete={handleMissionComplete} onError={onError} />
       case 9:
          return <Mission9DebtMaze onComplete={handleMissionComplete} onError={onError} />
+      case 10:
+        return <Mission10MoneyDetective onComplete={handleMissionComplete} onError={onError} />
+      case 11:
+        return <Mission11choiceofnow onComplete={handleMissionComplete} onError={onError} />
+      case 12:
+        return <Mission12ThoughtDecoder onComplete={handleMissionComplete} onError={onError} />
         // 👉 NOVA MISSÃO — PASSO 4 (último passo): adicione o case aqui, ex:
       // case 4:
       //   return <Mission4LeakHunt onComplete={handleMissionComplete} onError={onError} />
@@ -137,4 +151,3 @@ export function MissionRunner({ missionId, onFinishMission, onError, onClose }) 
 const overlayStyle = { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }
 const modalStyle = { backgroundColor: '#0f172a', borderRadius: '16px', padding: '1.5rem', maxWidth: '520px', width: '100%', border: '1px solid #1e293b', position: 'relative', color: '#fff' }
 const closeBtnStyle = { position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }
- 

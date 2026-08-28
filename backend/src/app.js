@@ -99,6 +99,44 @@ function processXP(amount) {
     player.level += 1;
   }
 }
+
+// --- BANCO DE PERGUNTAS DA TELA DE RECUPERAÇÃO DE VIDA ---
+// Cada pergunta segue o contrato que o GameOver.jsx espera:
+// { title, description, choices: [{ id, text, isCorrect, feedback }] }
+const recoveryQuizzes = [
+  {
+    title: "Desafio de Recarga",
+    description: "O que é mais importante fazer ANTES de gastar seu dinheiro com algo que você quer (não precisa)?",
+    choices: [
+      { id: "a", text: "Comprar na hora, para não perder a vontade", isCorrect: false, feedback: "Isso é agir por impulso — tente de novo!" },
+      { id: "b", text: "Verificar se isso cabe no que você já planejou gastar", isCorrect: true, feedback: "Isso mesmo! Planejar antes evita arrependimento depois. +1 vida!" },
+      { id: "c", text: "Pedir emprestado para alguém", isCorrect: false, feedback: "Isso pode criar uma dívida desnecessária — tente de novo!" }
+    ]
+  },
+  {
+    title: "Desafio de Recarga",
+    description: "Você ganhou uma mesada. Qual é a atitude mais consciente?",
+    choices: [
+      { id: "a", text: "Gastar tudo no primeiro dia", isCorrect: false, feedback: "Gastar tudo de uma vez deixa você sem opções depois — tente de novo!" },
+      { id: "b", text: "Guardar uma parte antes de gastar o resto", isCorrect: true, feedback: "Exato! Guardar uma parte primeiro é a base de qualquer planejamento. +1 vida!" },
+      { id: "c", text: "Emprestar tudo para um amigo", isCorrect: false, feedback: "Isso não te ajuda a construir sua própria reserva — tente de novo!" }
+    ]
+  },
+  {
+    title: "Desafio de Recarga",
+    description: "O que significa 'gasto por impulso'?",
+    choices: [
+      { id: "a", text: "Uma compra planejada com calma", isCorrect: false, feedback: "Isso é o oposto de impulso — tente de novo!" },
+      { id: "b", text: "Uma compra feita sem pensar, geralmente por emoção do momento", isCorrect: true, feedback: "Correto! Reconhecer o impulso é o primeiro passo para controlá-lo. +1 vida!" },
+      { id: "c", text: "Guardar dinheiro todo mês", isCorrect: false, feedback: "Isso é o contrário de impulso, é planejamento — tente de novo!" }
+    ]
+  }
+];
+
+function getRandomRecoveryQuiz() {
+  const index = Math.floor(Math.random() * recoveryQuizzes.length);
+  return recoveryQuizzes[index];
+}
  
 // --- ROTAS DO JOGADOR LOCAL & MISSÕES (Suporta /api e / direto) ---
  
@@ -129,6 +167,27 @@ const postAnswerHandler = (req, res) => {
 };
 app.post('/player/answer', postAnswerHandler);
 app.post('/api/player/answer', postAnswerHandler);
+
+// Recovery Quest GET — pergunta de educação financeira da tela de 0 vidas
+const getRecoveryQuestHandler = (req, res) => {
+  const quiz = getRandomRecoveryQuiz();
+  res.json(quiz);
+};
+app.get('/player/recovery-quest', getRecoveryQuestHandler);
+app.get('/api/player/recovery-quest', getRecoveryQuestHandler);
+
+// Add Life POST — concede +1 vida (respeitando o teto de maxLives)
+const postAddLifeHandler = (req, res) => {
+  if (player.lives < player.maxLives) {
+    player.lives += 1;
+  }
+  res.json({
+    success: true,
+    player: player
+  });
+};
+app.post('/player/add-life', postAddLifeHandler);
+app.post('/api/player/add-life', postAddLifeHandler);
  
 // Missions GET
 const getMissionsHandler = (req, res) => res.json(Object.values(missionsData));

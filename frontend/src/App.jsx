@@ -172,8 +172,19 @@ function App() {
     { id: 7, title: 'Missão 7: Planejando o Futuro' },
     { id: 8, title: 'Missão 8: Multiplicando Patrimônio' },
     { id: 9, title: 'Missão 9: Mestre das Finanças' },
+    { id: 10, title: 'Missão 10: O Dinheiro Desaparecido' },
+    { id: 11, title: 'Missão 11: A Escolha de Agora' },
+    { id: 12, title: 'Missão 12: O Código do Dinheiro' },
+    { id: 13, title: 'Missão 13: Efeito Dominó' },
+    { id: 14, title: 'Missão 14: O Primeiro Tesouro' },
+    { id: 15, title: 'Missão 15: Caça aos Vazamentos' },
+    { id: 16, title: 'Missão 16: Aliado ou Peso?' },
+    { id: 17, title: 'Missão 17: Construa Sua Máquina' },
+    { id: 18, title: 'Missão 18: O Poder do Tempo' },
+    { id: 19, title: 'Missão 19: Investidor ou Apostador?' },
   ]
 
+  // Lógica Dinâmica e Escalável de Cálculo de Estados de Missão
   const calculateMissionsState = (allMissions, currentMissionId, completedMissions = []) => {
     const completedSet = new Set(completedMissions.map(Number))
     const currId = Number(currentMissionId)
@@ -186,8 +197,13 @@ function App() {
     return sourceList.map((m) => {
       const mId = Number(m.id)
       const isCompleted = completedSet.has(mId)
-      const isCurrent = mId === currId
-      const isLocked = !isCompleted && !isCurrent && mId > currId
+      
+      // Regra Escalável:
+      // Desbloqueado se for a 1ª missão, se já foi concluída, se for a missão atual do usuário
+      // OU se a missão anterior (mId - 1) foi concluída.
+      const isUnlocked = mId === 1 || isCompleted || mId === currId || completedSet.has(mId - 1)
+      const isLocked = !isUnlocked
+      const isCurrent = mId === currId || (!isCompleted && isUnlocked)
 
       return {
         ...m,
@@ -202,33 +218,57 @@ function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        const playerData = await fetchPlayerData()
-        const missionsDataRaw = await fetchMissions()
+        let playerDataBackend = null
+        let missionsDataRaw = null
+
+        try {
+          playerDataBackend = await fetchPlayerData()
+          missionsDataRaw = await fetchMissions()
+        } catch (e) {
+          console.warn('Erro na chamada da API, utilizando dados locais.')
+        }
 
         let missionsData = Array.isArray(missionsDataRaw)
           ? missionsDataRaw
           : Object.values(missionsDataRaw || {})
 
-        if (!playerData) {
-          const initialPlayer = {
-            lives: 3,
-            maxLives: 3,
-            xp: 0,
-            targetXP: 100,
-            level: 1,
-            currentMissionId: 1,
-            completedMissions: [],
-          }
-          setPlayer(initialPlayer)
-          setMissions(calculateMissionsState(baseMissionsTree, 1, []))
-          return
+        // Pega do localStorage
+        const savedPlayerLocal = localStorage.getItem('aprix_player_data')
+        const localPlayerData = savedPlayerLocal ? JSON.parse(savedPlayerLocal) : null
+
+        // FUSÃO DE DADOS (LOCAL + SERVIDO): Nunca perde o progresso salvo
+        const localCompleted = (localPlayerData?.completedMissions || []).map(Number)
+        const backendCompleted = (playerDataBackend?.completedMissions || []).map(Number)
+
+        // Junta as duas listas de concluídas sem duplicatas
+        const mergedCompleted = Array.from(new Set([...localCompleted, ...backendCompleted]))
+
+        // Se o localStorage estiver zerado, assume progresso padrão até a 10 para desenvolvimento
+        const finalCompleted = mergedCompleted.length > 0 ? mergedCompleted : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+        // Calcula a maior missão desbloqueada
+        const maxCompletedId = finalCompleted.length > 0 ? Math.max(...finalCompleted) : 0
+        const calculatedNextMission = maxCompletedId + 1
+
+        const activePlayerData = {
+          lives: playerDataBackend?.lives ?? localPlayerData?.lives ?? 3,
+          maxLives: playerDataBackend?.maxLives ?? localPlayerData?.maxLives ?? 3,
+          xp: Math.max(playerDataBackend?.xp || 0, localPlayerData?.xp || 0),
+          targetXP: playerDataBackend?.targetXP ?? localPlayerData?.targetXP ?? 100,
+          level: Math.max(playerDataBackend?.level || 1, localPlayerData?.level || 1),
+          currentMissionId: Math.max(
+            Number(playerDataBackend?.currentMissionId || 1),
+            Number(localPlayerData?.currentMissionId || 1),
+            calculatedNextMission
+          ),
+          completedMissions: finalCompleted,
         }
 
-        const currId = Number(playerData?.currentMissionId || 1)
-        const completedList = (playerData?.completedMissions || []).map(Number)
+        // Salva de volta no LocalStorage para sincronizar
+        localStorage.setItem('aprix_player_data', JSON.stringify(activePlayerData))
 
-        setPlayer(playerData)
-        setMissions(calculateMissionsState(missionsData, currId, completedList))
+        setPlayer(activePlayerData)
+        setMissions(calculateMissionsState(missionsData, activePlayerData.currentMissionId, finalCompleted))
       } catch (error) {
         console.error('Erro ao carregar dados:', error)
       } finally {
@@ -247,7 +287,9 @@ function App() {
 
       if (newLives === 0) setActiveMissionId(null)
 
-      return { ...prev, lives: newLives }
+      const updated = { ...prev, lives: newLives }
+      localStorage.setItem('aprix_player_data', JSON.stringify(updated))
+      return updated
     })
   }
 
@@ -255,13 +297,16 @@ function App() {
     setPlayer((prev) => {
       if (!prev) return null
       const updatedLives = updatedData?.lives ?? Math.min(prev.maxLives || 3, (prev.lives || 0) + 1)
-      return { ...prev, ...updatedData, lives: updatedLives }
+      const updated = { ...prev, ...updatedData, lives: updatedLives }
+      localStorage.setItem('aprix_player_data', JSON.stringify(updated))
+      return updated
     })
   }
 
   const handleSelectMission = (mission) => {
     if (mission.isCompleted) {
-      alert(`Você já concluiu a Missão ${mission.id}!`)
+      // Opcional: Permitir refazer a missão se quiser
+      setActiveMissionId(mission.id)
       return
     }
 
@@ -285,7 +330,9 @@ function App() {
         newLevel += 1
       }
 
-      return { ...prev, xp: newXP, level: newLevel }
+      const updated = { ...prev, xp: newXP, level: newLevel }
+      localStorage.setItem('aprix_player_data', JSON.stringify(updated))
+      return updated
     })
   }
 
@@ -298,6 +345,8 @@ function App() {
     const numericCompletedId = Number(completedId)
     const nextMissionId = numericCompletedId + 1
     const earnedXP = Number(resultData.xpEarned ?? 0)
+
+    let updatedPlayer = null
 
     setPlayer((prev) => {
       if (!prev) return null
@@ -314,19 +363,22 @@ function App() {
       const prevCompleted = (prev.completedMissions || []).map(Number)
       const updatedCompleted = Array.from(new Set([...prevCompleted, numericCompletedId]))
 
-      return {
+      updatedPlayer = {
         ...prev,
         xp: newXP,
         level: newLevel,
-        currentMissionId: nextMissionId,
+        currentMissionId: Math.max(prev.currentMissionId || 1, nextMissionId),
         completedMissions: updatedCompleted
       }
+
+      // Garante salvamento síncrono no localStorage
+      localStorage.setItem('aprix_player_data', JSON.stringify(updatedPlayer))
+
+      return updatedPlayer
     })
 
     setMissions((prevMissions) => {
-      const completedList = Array.from(
-        new Set([...prevMissions.filter(m => m.isCompleted).map(m => Number(m.id)), numericCompletedId])
-      )
+      const completedList = updatedPlayer?.completedMissions || [numericCompletedId]
       return calculateMissionsState(prevMissions, nextMissionId, completedList)
     })
 
@@ -335,7 +387,7 @@ function App() {
     try {
       await submitAnswer(numericCompletedId, { completed: true, xpEarned: earnedXP })
     } catch (error) {
-      console.warn('Erro ao salvar no servidor (progresso salvo localmente):', error)
+      console.warn('Erro ao salvar no servidor (progresso preservado localmente):', error)
     }
   }
 
