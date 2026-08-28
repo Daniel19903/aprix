@@ -163,25 +163,25 @@ function App() {
   })
 
   const baseMissionsTree = [
-    { id: 1, title: 'Missão 1: Primeiro Passo Financeiro' },
-    { id: 2, title: 'Missão 2: Criando um Orçamento' },
-    { id: 3, title: 'Missão 3: Evitando Dívidas' },
-    { id: 4, title: 'Missão 4: Reserva de Emergência' },
-    { id: 5, title: 'Missão 5: Entendendo os Juros' },
-    { id: 6, title: 'Missão 6: Investimentos Básicos' },
-    { id: 7, title: 'Missão 7: Planejando o Futuro' },
-    { id: 8, title: 'Missão 8: Multiplicando Patrimônio' },
-    { id: 9, title: 'Missão 9: Mestre das Finanças' },
-    { id: 10, title: 'Missão 10: O Dinheiro Desaparecido' },
-    { id: 11, title: 'Missão 11: A Escolha de Agora' },
-    { id: 12, title: 'Missão 12: O Código do Dinheiro' },
-    { id: 13, title: 'Missão 13: Efeito Dominó' },
-    { id: 14, title: 'Missão 14: O Primeiro Tesouro' },
-    { id: 15, title: 'Missão 15: Caça aos Vazamentos' },
-    { id: 16, title: 'Missão 16: Aliado ou Peso?' },
-    { id: 17, title: 'Missão 17: Construa Sua Máquina' },
-    { id: 18, title: 'Missão 18: O Poder do Tempo' },
-    { id: 19, title: 'Missão 19: Investidor ou Apostador?' },
+    { id: 1, title: 'ACORDA, FINANCEIRO!' },
+    { id: 2, title: 'O FLUXO DO DINHEIRO' },
+    { id: 3, title: 'O DINHEIRO SUMIU' },
+    { id: 4, title: 'CAÇA AO VAZAMENTO' },
+    { id: 5, title: 'ESCOLHA SEU CAMINHO' },
+    { id: 6, title: 'PAGUE-SE PRIMEIRO' },
+    { id: 7, title: 'ORÇAMENTO EM EQUILÍBRIO' },
+    { id: 8, title: 'PRIORIDADE MÁXIMA' },
+    { id: 9, title: 'O LABIRINTO DAS DÍVIDAS' },
+    { id: 10, title: 'O DINHEIRO DESAPARECIDO' },
+    { id: 11, title: 'A ESCOLHA DE AGORA' },
+    { id: 12, title: 'O CÓDIGO DO DINHEIRO' },
+    { id: 13, title: 'Efeito Dominó' },
+    { id: 14, title: 'O Primeiro Tesouro' },
+    { id: 15, title: 'Caça aos Vazamentos' },
+    { id: 16, title: 'Aliado ou Peso?' },
+    { id: 17, title: 'Construa Sua Máquina' },
+    { id: 18, title: 'O Poder do Tempo' },
+    { id: 19, title: 'Investidor ou Apostador?' },
   ]
 
   // Lógica Dinâmica e Escalável de Cálculo de Estados de Missão
@@ -243,8 +243,8 @@ function App() {
         // Junta as duas listas de concluídas sem duplicatas
         const mergedCompleted = Array.from(new Set([...localCompleted, ...backendCompleted]))
 
-        // Se o localStorage estiver zerado, assume progresso padrão até a 10 para desenvolvimento
-        const finalCompleted = mergedCompleted.length > 0 ? mergedCompleted : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        // ✅ FIX: Se não houver progresso salvo, mantém o array vazio (inicia na Missão 1)
+        const finalCompleted = mergedCompleted
 
         // Calcula a maior missão desbloqueada
         const maxCompletedId = finalCompleted.length > 0 ? Math.max(...finalCompleted) : 0
@@ -305,7 +305,6 @@ function App() {
 
   const handleSelectMission = (mission) => {
     if (mission.isCompleted) {
-      // Opcional: Permitir refazer a missão se quiser
       setActiveMissionId(mission.id)
       return
     }
